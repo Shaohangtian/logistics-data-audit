@@ -39,12 +39,16 @@
     python -m venv .venv
     .venv\Scripts\activate
     pip install -r requirements.txt
-    pytest tests/ -v
-    python scripts/make_figures.py
+    pytest tests/ -v                      # 30 个测试应全部通过
+    python scripts/make_figures.py        # 重新生成 reports/figures/ 下的图
     jupyter lab notebooks/
 
-`data/external/` 中的跨数据集验证数据体积较大，未入库，
-下载方式见 [`data/README.md`](data/README.md)。
+要看完整的**跨数据集对比**，需先下载外部数据（约 31 MB，未入库）：
+
+    python scripts/compare_datasets.py --fetch    # 含重试；失败会跳过而非中断
+    python scripts/compare_datasets.py --brief    # 打印对比表
+
+`data/external/` 中各数据集的来源与许可说明见 [`data/README.md`](data/README.md)。
 
 ## 来源与致谢
 

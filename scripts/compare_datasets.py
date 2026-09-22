@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+import time
 import urllib.request
 from pathlib import Path
 
@@ -45,19 +46,44 @@ SOURCES = {
 }
 
 
-def fetch(force: bool = False) -> None:
-    """把外部数据集下载到 data/external/（已存在则跳过）。"""
+def fetch(force: bool = False) -> list[str]:
+    """把外部数据集下载到 data/external/（已存在则跳过）。
+
+    返回下载失败的文件名列表；失败不致命，只是对比结果会少几份数据集。
+    """
     EXT.mkdir(parents=True, exist_ok=True)
+    failed: list[str] = []
     for name, url in SOURCES.items():
         dest = EXT / name
         if dest.exists() and not force:
             print(f'  已有 {name}')
             continue
         print(f'  下载 {name} ...', end='', flush=True)
-        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=90) as r:
-            dest.write_bytes(r.read())
-        print(f' {dest.stat().st_size / 1024:.0f} KB')
+        # 网络偶发失败（502 / 超时）时重试，仍失败则跳过该文件，
+        # 而不是让整个脚本崩溃 —— 只要还有数据集，对比表就有意义。
+        for attempt in range(1, 4):
+            try:
+                req = urllib.request.Request(
+                    url, headers={'User-Agent': 'Mozilla/5.0'})
+                with urllib.request.urlopen(req, timeout=120) as r:
+                    dest.write_bytes(r.read())
+                print(f' {dest.stat().st_size / 1024:.0f} KB')
+                break
+            except Exception as e:
+                if attempt == 3:
+                    print(f' 失败（{type(e).__name__}: {e}）')
+                    failed.append(name)
+                else:
+                    print(f' 重试{attempt}…', end='', flush=True)
+                    time.sleep(3)
+
+    if failed:
+        print()
+        print('!! 以下文件下载失败，对比结果会缺少对应数据集：')
+        for n in failed:
+            print(f'   - {n}')
+        print('   可稍后重跑 --fetch 补下（已下载的文件会跳过）。')
+    return failed
 
 
 # --------------------------------------------------------------------------
