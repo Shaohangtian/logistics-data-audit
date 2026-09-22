@@ -1,0 +1,33 @@
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.pyc
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# 临时/试验性图片
+reports/figures/*.png
+
+# 但以下两张是 README 正文引用的成品图，必须入库，
+# 否则 GitHub 上图片会显示为裂图。用 ! 抵消上面的规则：
+!reports/figures/leakage_heatmap.png
+!reports/figures/uniformity_ratios.png
+
+# 外部参考数据集（体积大，不入库；见 data/README.md 的下载说明）
+data/external/
+
+# Editors / OS
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
